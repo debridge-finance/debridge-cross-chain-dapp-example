@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.7;
+
+import "./libraries/Flags.sol";
+import "./interfaces/IDeBridgeGate.sol";
+import "./interfaces/ICrossChainCounter.sol";
+
+contract CrossChainIncrementor {
+    /// @dev DeBridgeGate's address on the current chain
+    IDeBridgeGate public deBridgeGate;
+
+    /// @dev Chain ID where the cross-chain counter contract has been deployed
+    uint crossChainCounterResidenceChainID;
+
+    /// @dev Address of the cross-chain counter contract (on the `crossChainCounterResidenceChainID` chain)
+    address crossChainCounterResidenceAddress;
+
+    /* ========== INITIALIZERS ========== */
+
+    constructor(
+            IDeBridgeGate deBridgeGate_,
+            uint crossChainCounterResidenceChainID_,
+            address crossChainCounterResidenceAddress_
+    ) {
+        deBridgeGate = deBridgeGate_;
+        crossChainCounterResidenceChainID = crossChainCounterResidenceChainID_;
+        crossChainCounterResidenceAddress = crossChainCounterResidenceAddress_;
+    }
+
+    /* ========== PUBLIC METHODS: SENDING ========== */
+
+    function increment(
+            uint8 _amount,
+            uint _executionFee
+    )
+        external
+        payable
+    {
+        bytes memory dstTxCall = _encodeReceiveCommand(
+            _amount,
+            msg.sender
+        );
+
+        _send(dstTxCall, _executionFee);
+    }
+
+    /* ========== INTERNAL METHODS ========== */
+
+    function _encodeReceiveCommand(uint8 _amount, address _initiator) internal pure returns (bytes memory) {
+        return
+            abi.encodeWithSelector(
+                ICrossChainCounter.receiveIncrementCommand.selector,
+                _amount,
+                _initiator
+            );
+    }
+
+    function _send(
+        bytes memory _dstTransactionCall,
+        uint _executionFee
+    )
+        internal
+    {
+        IDeBridgeGate.SubmissionAutoParamsTo memory autoParams;
+
+        autoParams.executionFee = _executionFee;
+
+        // requested by onlyCrossChainLiquidityBridge()
+        autoParams.flags = Flags.setFlag(autoParams.flags, Flags.PROXY_WITH_SENDER, true);
+
+        // if something happens, we need to revert the transaction, otherwise the sender will loose assets
+        autoParams.flags = Flags.setFlag(autoParams.flags, Flags.REVERT_IF_EXTERNAL_FAIL, true);
+
+        autoParams.data = _dstTransactionCall;
+
+        deBridgeGate.send{value: msg.value}(
+            address(0), // _tokenAddress
+            msg.value, // _amount
+            crossChainCounterResidenceChainID, // _chainIdTo
+            abi.encodePacked(crossChainCounterResidenceAddress), // _receiver
+            "", // _permit
+            true, // _useAssetFee
+            0, // _referralCode
+            abi.encode(autoParams) // _autoParams
+        );
+    }
+
+}

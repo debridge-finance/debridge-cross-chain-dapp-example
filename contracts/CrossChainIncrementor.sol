@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.7;
 
-import "./libraries/Flags.sol";
-import "./interfaces/IDeBridgeGate.sol";
+import "@debridge-finance/contracts/contracts/libraries/Flags.sol";
+import "@debridge-finance/contracts/contracts/interfaces/IDeBridgeGate.sol";
+
 import "./interfaces/ICrossChainCounter.sol";
 
 contract CrossChainIncrementor {
@@ -10,7 +11,7 @@ contract CrossChainIncrementor {
     IDeBridgeGate public deBridgeGate;
 
     /// @dev Chain ID where the cross-chain counter contract has been deployed
-    uint crossChainCounterResidenceChainID;
+    uint256 crossChainCounterResidenceChainID;
 
     /// @dev Address of the cross-chain counter contract (on the `crossChainCounterResidenceChainID` chain)
     address crossChainCounterResidenceAddress;
@@ -18,9 +19,9 @@ contract CrossChainIncrementor {
     /* ========== INITIALIZERS ========== */
 
     constructor(
-            IDeBridgeGate deBridgeGate_,
-            uint crossChainCounterResidenceChainID_,
-            address crossChainCounterResidenceAddress_
+        IDeBridgeGate deBridgeGate_,
+        uint256 crossChainCounterResidenceChainID_,
+        address crossChainCounterResidenceAddress_
     ) {
         deBridgeGate = deBridgeGate_;
         crossChainCounterResidenceChainID = crossChainCounterResidenceChainID_;
@@ -29,24 +30,19 @@ contract CrossChainIncrementor {
 
     /* ========== PUBLIC METHODS: SENDING ========== */
 
-    function increment(
-            uint8 _amount,
-            uint _executionFee
-    )
-        external
-        payable
-    {
-        bytes memory dstTxCall = _encodeReceiveCommand(
-            _amount,
-            msg.sender
-        );
+    function increment(uint8 _amount, uint256 _executionFee) external payable {
+        bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
 
         _send(dstTxCall, _executionFee);
     }
 
     /* ========== INTERNAL METHODS ========== */
 
-    function _encodeReceiveCommand(uint8 _amount, address _initiator) internal pure returns (bytes memory) {
+    function _encodeReceiveCommand(uint8 _amount, address _initiator)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return
             abi.encodeWithSelector(
                 ICrossChainCounter.receiveIncrementCommand.selector,
@@ -55,10 +51,7 @@ contract CrossChainIncrementor {
             );
     }
 
-    function _send(
-        bytes memory _dstTransactionCall,
-        uint _executionFee
-    )
+    function _send(bytes memory _dstTransactionCall, uint256 _executionFee)
         internal
     {
         IDeBridgeGate.SubmissionAutoParamsTo memory autoParams;
@@ -66,10 +59,18 @@ contract CrossChainIncrementor {
         autoParams.executionFee = _executionFee;
 
         // requested by onlyCrossChainLiquidityBridge()
-        autoParams.flags = Flags.setFlag(autoParams.flags, Flags.PROXY_WITH_SENDER, true);
+        autoParams.flags = Flags.setFlag(
+            autoParams.flags,
+            Flags.PROXY_WITH_SENDER,
+            true
+        );
 
         // if something happens, we need to revert the transaction, otherwise the sender will loose assets
-        autoParams.flags = Flags.setFlag(autoParams.flags, Flags.REVERT_IF_EXTERNAL_FAIL, true);
+        autoParams.flags = Flags.setFlag(
+            autoParams.flags,
+            Flags.REVERT_IF_EXTERNAL_FAIL,
+            true
+        );
 
         autoParams.data = _dstTransactionCall;
 
@@ -84,5 +85,4 @@ contract CrossChainIncrementor {
             abi.encode(autoParams) // _autoParams
         );
     }
-
 }

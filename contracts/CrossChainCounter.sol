@@ -2,25 +2,26 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/ICrossChainCounter.sol";
-import "./interfaces/IDeBridgeGate.sol";
-import "./interfaces/ICallProxy.sol";
+import "@debridge-finance/contracts/contracts/interfaces/IDeBridgeGate.sol";
+import "@debridge-finance/contracts/contracts/interfaces/ICallProxy.sol";
 
-interface IDebridgeGateWithCallProxy is IDeBridgeGate {
+import "./interfaces/ICrossChainCounter.sol";
+
+/// @notice IDeBridgeGate interface doesn't contain a getter for the `callProxy` public variable, which is
+///         defined in the `DeBridgeGate` contract, so we create a dummy interface solely for this getter
+interface IDebridgeGateWithCallProxyGetter is IDeBridgeGate {
     function callProxy() external returns (address);
 }
 
 contract CrossChainCounter is AccessControl, ICrossChainCounter {
-
     /// @dev DeBridgeGate's address on the current chain
-    IDeBridgeGate public deBridgeGate;
+    IDebridgeGateWithCallProxyGetter public deBridgeGate;
 
     /// @dev chains, where commands are allowed to come from
     /// @dev chain_id_from => ChainInfo
-    mapping(uint => ChainInfo) supportedChains;
+    mapping(uint256 => ChainInfo) supportedChains;
 
-    uint public counter;
-    address public latestIncrementInitiator;
+    uint256 public counter;
 
     /* ========== MODIFIERS ========== */
 
@@ -32,18 +33,27 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
     /// @dev Restricts calls made by deBridge's CallProxy
     ///         AND that are originating from the whitelisted CrossChainCounter address on the origin chain
     modifier onlyCrossChainIncrementor() {
-        ICallProxy callProxy = ICallProxy(IDebridgeGateWithCallProxy(address(deBridgeGate)).callProxy());
+        ICallProxy callProxy = ICallProxy(
+            deBridgeGate.callProxy()
+        );
 
         // caller is CallProxy?
         if (address(callProxy) != msg.sender) {
             revert CallProxyBadRole();
         }
 
-        bytes memory nativeSender = callProxy.submissionNativeSender();
         uint256 chainIdFrom = callProxy.submissionChainIdFrom();
 
+        if (supportedChains[chainIdFrom].crossChainCounterAddress.length == 0) {
+            revert ChainNotSupported(chainIdFrom);
+        }
+
         // has the transaction being initiated by the whitelisted CrossChainCounter on the origin chain?
-        if (keccak256(supportedChains[chainIdFrom].crossChainCounterAddress) != keccak256(nativeSender)) {
+        bytes memory nativeSender = callProxy.submissionNativeSender();
+        if (
+            keccak256(supportedChains[chainIdFrom].crossChainCounterAddress) !=
+            keccak256(nativeSender)
+        ) {
             revert NativeSenderBadRole(nativeSender, chainIdFrom);
         }
 
@@ -52,15 +62,19 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
 
     /* ========== INITIALIZERS ========== */
 
-    constructor(IDeBridgeGate deBridgeGate_) {
-       deBridgeGate = deBridgeGate_;
+    constructor(IDebridgeGateWithCallProxyGetter deBridgeGate_) {
+        deBridgeGate = deBridgeGate_;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /* ========== MAINTENANCE METHODS ========== */
 
-    function addChainSupport(uint256 _chainId, bytes memory _crossChainCounterAddress) external onlyAdmin {
-        supportedChains[_chainId].crossChainCounterAddress = _crossChainCounterAddress;
+    function addChainSupport(
+        uint256 _chainId,
+        bytes memory _crossChainCounterAddress
+    ) external onlyAdmin {
+        supportedChains[_chainId]
+            .crossChainCounterAddress = _crossChainCounterAddress;
         supportedChains[_chainId].isSupported = true;
 
         emit SupportedChainAdded(_chainId, _crossChainCounterAddress);
@@ -79,7 +93,8 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
         onlyCrossChainIncrementor
     {
         counter += _amount;
-        latestIncrementInitiator = _initiator;
-        emit CounterIncremented(counter, _amount, _initiator);
+
+        uint256 chainIdFrom = ICallProxy(deBridgeGate.callProxy()).submissionChainIdFrom();
+        emit CounterIncremented(counter, _amount, chainIdFrom, _initiator);
     }
 }

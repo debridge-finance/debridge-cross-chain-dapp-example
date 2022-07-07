@@ -1,66 +1,118 @@
 import { expect } from "chai";
-import { ethers, deBridge } from "hardhat";
-import { CrossChainCounter, CrossChainIncrementor, DeBridgeGate } from "../typechain";
+import { BigNumber } from "ethers";
+import { deBridge, ethers } from "hardhat";
 
-interface State {
-  gate: DeBridgeGate
-  counter: CrossChainCounter,
-  incrementor: CrossChainIncrementor
+import {
+  CrossChainCounter,
+  CrossChainCounter__factory,
+  CrossChainIncrementor,
+  CrossChainIncrementor__factory,
+  DeBridgeGate,
+} from "../typechain";
+
+interface TestSuiteState {
+  gate: DeBridgeGate;
+  gateProtocolFee: BigNumber;
+  counter: CrossChainCounter;
+  incrementor: CrossChainIncrementor;
 }
 
-async function deployContracts(): Promise<State> {
-
+// Creates a set of contracts for each test suite (useful for before() and beforeEach())
+async function deployContracts(): Promise<TestSuiteState> {
   const gate = await deBridge.emulator.deployGate();
 
-  const Counter = await ethers.getContractFactory('CrossChainCounter');
-  const counter = await Counter.deploy(gate.address);
+  const Counter = (await ethers.getContractFactory(
+    "CrossChainCounter"
+  )) as CrossChainCounter__factory;
+  const counter = (await Counter.deploy(gate.address)) as CrossChainCounter;
   await counter.deployed();
 
-  const Incrementor = await ethers.getContractFactory('CrossChainIncrementor')
-  const incrementor = await Incrementor.deploy(gate.address, ethers.provider.network.chainId, counter.address)
-  await incrementor.deployed()
+  const Incrementor = (await ethers.getContractFactory(
+    "CrossChainIncrementor"
+  )) as CrossChainIncrementor__factory;
+  const incrementor = (await Incrementor.deploy(
+    gate.address,
+    ethers.provider.network.chainId,
+    counter.address
+  )) as CrossChainIncrementor;
+  await incrementor.deployed();
 
-  await counter.addChainSupport(ethers.provider.network.chainId, incrementor.address)
+  await counter.addChainSupport(
+    ethers.provider.network.chainId,
+    incrementor.address
+  );
 
   return {
-    gate, counter, incrementor
-  }
-
+    gate,
+    gateProtocolFee: await gate.globalFixedNativeFee(),
+    counter,
+    incrementor,
+  };
 }
 
-describe("CrossChainCounter and CrossChainIncrementor communication - different flows", function () {
-  let STATE: State|null = null;
+describe("CrossChainCounter and CrossChainIncrementor communication: sanity checks", function () {
+  let contracts: TestSuiteState;
   const INCREMENT_BY = 10;
 
   before(async () => {
-    STATE = await deployContracts();
-  })
-
-  it("Must correctly increment", async function () {
-    await STATE!.incrementor.increment(INCREMENT_BY, 0, {
-      // deBridge takes a fixed fee in the native blockchain currency, pass it as a value
-      value: await STATE!.gate.globalFixedNativeFee()
-    });
-
-    await STATE!.gate.claim(
-      ... await deBridge.emulator.getClaimArgs()
-    )
-
-    expect(await STATE!.counter.counter())
-      .to.be.eq(INCREMENT_BY)
+    contracts = await deployContracts();
   });
 
-  it("Must handle second increment", async function() {
-    await STATE!.incrementor.increment(INCREMENT_BY, 0, {
-      // deBridge takes a fixed fee in the native blockchain currency, pass it as a value
-      value: await STATE!.gate.globalFixedNativeFee()
+  it("CrossChainCounter is being incremented by the CrossChainIncrementor request", async function () {
+    await contracts.incrementor.increment(INCREMENT_BY, 0, {
+      value: contracts.gateProtocolFee,
     });
 
-    await STATE!.gate.claim(
-      ... await deBridge.emulator.getClaimArgs()
-    )
+    await deBridge.emulator.autoClaim();
 
-    expect(await STATE!.counter.counter())
-      .to.be.eq(INCREMENT_BY * 2)
-  })
+    expect(await contracts.counter.counter()).to.be.eq(INCREMENT_BY);
+  });
+
+  it("CrossChainCounter is being incremented by the CrossChainIncrementor request (second request)", async function () {
+    await contracts.incrementor.increment(INCREMENT_BY, 0, {
+      value: contracts.gateProtocolFee,
+    });
+
+    await deBridge.emulator.autoClaim();
+
+    expect(await contracts.counter.counter()).to.be.eq(INCREMENT_BY * 2);
+  });
+
+  it("CrossChainCounter rejects direct call", async () => {
+    // CrossChainCounter accepts only calls from the deBridgeGate's CallProxy contract,
+    // rejecting calls initiated by any other contract or sender
+    await expect(
+      contracts.counter.receiveIncrementCommand(
+        INCREMENT_BY,
+        ethers.constants.AddressZero /*not used*/
+      )
+    ).to.revertedWith("CallProxyBadRole");
+  });
+
+  it("CrossChainCounter rejects a broadcasted call from non-approved native sender", async () => {
+    // deploy another CrossChainIncrementor
+    // it is expected that it's call won't succeed because this instance of CrossChainIncrementor
+    // resides on a new address which is not approved by CrossChainCounter
+    const MaliciousIncrementor = (await ethers.getContractFactory(
+      "CrossChainIncrementor"
+    )) as CrossChainIncrementor__factory;
+    const maliciousIncrementor = (await MaliciousIncrementor.deploy(
+      contracts.gate.address,
+      ethers.provider.network.chainId,
+      contracts.counter.address
+    )) as CrossChainIncrementor;
+    await maliciousIncrementor.deployed();
+
+    await maliciousIncrementor.increment(INCREMENT_BY, 0, {
+      value: contracts.gateProtocolFee,
+    });
+
+    // CrossChainCounter rejects all calls from deBridgeGate's CallProxy that
+    // where initiated from unknown (non-trusted) contract on the supported chain
+    // with raising NativeSenderBadRole() error.
+    // However, CallProxy handles this error and reverts another one: ExternalCallFailed
+    await expect(deBridge.emulator.autoClaim()).to.be.revertedWith(
+      "ExternalCallFailed"
+    );
+  });
 });

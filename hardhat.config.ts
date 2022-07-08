@@ -3,14 +3,9 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
-import * as dotenv from "dotenv";
-import "hardhat-gas-reporter";
-import { HardhatUserConfig, task } from "hardhat/config";
-import "solidity-coverage";
+import { HardhatUserConfig } from "hardhat/config";
 
 import "./src/tasks/deployment";
-
-dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -30,13 +25,6 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
     },
-  },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: "USD",
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };
 

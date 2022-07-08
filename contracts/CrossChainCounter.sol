@@ -48,10 +48,10 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
             revert ChainNotSupported(chainIdFrom);
         }
 
-        // has the transaction being initiated by the whitelisted CrossChainCounter on the origin chain?
+        // has the transaction being initiated by the whitelisted CrossChainIncrementor on the origin chain?
         bytes memory nativeSender = callProxy.submissionNativeSender();
         if (
-            keccak256(supportedChains[chainIdFrom].crossChainCounterAddress) !=
+            keccak256(supportedChains[chainIdFrom].crossChainIncrementorAddress) !=
             keccak256(nativeSender)
         ) {
             revert NativeSenderBadRole(nativeSender, chainIdFrom);
@@ -71,13 +71,13 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
 
     function addChainSupport(
         uint256 _chainId,
-        bytes memory _crossChainCounterAddress
+        bytes memory _crossChainIncrementorAddress
     ) external onlyAdmin {
         supportedChains[_chainId]
-            .crossChainCounterAddress = _crossChainCounterAddress;
+            .crossChainIncrementorAddress = _crossChainIncrementorAddress;
         supportedChains[_chainId].isSupported = true;
 
-        emit SupportedChainAdded(_chainId, _crossChainCounterAddress);
+        emit SupportedChainAdded(_chainId, _crossChainIncrementorAddress);
     }
 
     function removeChainSupport(uint256 _chainId) external onlyAdmin {

@@ -1,46 +1,43 @@
-# Advanced Sample Hardhat Project
+## debridge-cross-chain-messaging-example
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
+A complete example of a conceptual cross-chain dApp which leverages the deBridge protocol to send calls between its contracts across chains. This example is built on top of the Hardhat framework and the [`hardhat-debridge` plugin](https://github.com/debridge-finance/hardhat-debridge).
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
+This repository will help you understand how to write, test, emulate and run EVM contracts that are intended to rely on deBridge infrastructure.
 
-Try running some of the following tasks:
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.ts
-TS_NODE_FILES=true npx ts-node scripts/deploy.ts
-npx eslint '**/*.{js,ts}'
-npx eslint '**/*.{js,ts}' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
-```
+###
 
-# Etherscan verification
+Assume there is a `CrossChainCounter` contract residing on one chain. It stores a value that can be incremented by a call originating from another chain, and this call must be initiated by and only by the `CrossChainIncrementor` contract residing at the known trusted address.
 
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
+### Contracts overview
 
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
+`CrossChainCounter` is the contract representing receiver: it stores a value which is expected to be incremented by a call initiated by the trusted contract on another chain an broadcasted by the `deBridgeGate` contract. Thus, it expects the address of the `deBridgeGate` contract during deployment (you can find it at the [official docs](https://docs.debridge.finance/contracts/mainnet-addresses)).
 
-```shell
-hardhat run --network ropsten scripts/deploy.ts
-```
+`CrossChainIncrementor` is the contract representing sender: it is able to construct a message wit ha transaction call (a set of instructions to invoke `CrossChainCounter.receiveIncrementCommand()` with the given args) and pass it to the `deBridgeGate` with the intention to be broadcasted to another chain (where `CrossChainCounter` already resides) and be executed there. Thus, it expects:
+- the address of the `deBridgeGate` contract on the same chain the contract is being deployed,
+- the address of the `CrossChainCounter` contract on the destination chain,
+- the chain ID of the destination chain where `CrossChainCounter` resides.
 
-Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
+Additionally, `CrossChainCounter` only accepts calls originating from the trusted addresses, to it must be configured to whitelist the chain ID and the address where the `CrossChainCounter` contract resides. See `CrossChainIncrementor.addChainSupport()`.
 
-```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
-```
+### Tests overview
 
-# Performance optimizations
+Tests are leveraging the [`hardhat-debridge` plugin](https://github.com/debridge-finance/hardhat-debridge).
 
-For faster runs of your tests and scripts, consider skipping ts-node's type checking by setting the environment variable `TS_NODE_TRANSPILE_ONLY` to `1` in hardhat's environment. For more details see [the documentation](https://hardhat.org/guides/typescript.html#performance-optimizations).
+`Basic.ts` is a simple test validating the normal flow: after the contracts are being deployed, the `CrossChainIncrementor` contract is being invoked to construct and pass the message to the gate; the emulator sends the message back to the gate; the gate executes the call which actually calls the `CrossChainCounter` with the args given in the message.
+
+`Cases.ts` is a set of unit tests needed to validate edge cases and ensure security considerations are met: e.g., ensure that `CrossChainCounter` cannot by called by anyone but the gate, or that it rejects calls from untrusted addresses, etc.
+
+
+### Tasks overview
+
+This repository comes with a bunch of handy console commands to reproduce the aforementioned flow, either on the deBridge emulator (a part of `hardhat-debridge` plugin) or even on the mainnet chain. Available commands:
+- `npx hardhat deploy-counter`
+- `npx hardhat deploy-incrementor`
+- `npx hardhat configure-counter`
+- `npx hardhat send-increment`
+- `npx hardhat read-increment`
+
+
+### Further reading
+

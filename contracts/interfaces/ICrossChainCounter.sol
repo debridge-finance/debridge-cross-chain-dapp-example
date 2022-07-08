@@ -5,8 +5,8 @@ interface ICrossChainCounter {
 
     /* ========== EVENTS ========== */
 
-    event SupportedChainAdded(uint256 _chainId, bytes _adapter);
-    event SupportedChainRemoved(uint256 _chainId);
+    event SupportedChainAdded(uint256 chainId, bytes incrementorAddress);
+    event SupportedChainRemoved(uint256 chainId);
     event CounterIncremented(
         uint256 newCounterValue,
         uint8 amount,
@@ -25,7 +25,7 @@ interface ICrossChainCounter {
 
     struct ChainInfo {
         bool isSupported;
-        bytes crossChainCounterAddress;
+        bytes crossChainIncrementorAddress;
     }
 
     /* ========== METHODS ========== */

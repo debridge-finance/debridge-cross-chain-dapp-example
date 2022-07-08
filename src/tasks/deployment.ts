@@ -1,6 +1,6 @@
 import { BigNumber } from "ethers";
-import { HardhatUserConfig, task } from "hardhat/config";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { task } from "hardhat/config";
+import chalk from "chalk";
 
 import {
   CrossChainCounter,
@@ -11,11 +11,13 @@ import {
 } from "../../typechain";
 import { SentEvent } from "../../typechain/IDeBridgeGate";
 
+const DEFAULT_DEBRIDGE_ADDRESS = '0x43dE2d77BF8027e25dBD179B491e8d64f38398aA';
+
 task("deploy-counter", "Deploys CrossChainCounter")
   .addOptionalParam(
     "deBridgeGateAddress",
-    "",
-    "0x43dE2d77BF8027e25dBD179B491e8d64f38398aA"
+    "Address of the deBridgeGate contract on the current chain (default value represents the mainnet address)",
+    DEFAULT_DEBRIDGE_ADDRESS
   )
   .setAction(async (args, hre) => {
     const Counter = (await hre.ethers.getContractFactory(
@@ -27,19 +29,18 @@ task("deploy-counter", "Deploys CrossChainCounter")
     await counter.deployed();
 
     console.log(
-      `The CrossChainCounter has been deployed at ${counter.address}`
+      chalk.green('CrossChainCounter'),
+      `has been deployed at ${chalk.red(counter.address)}`,
+      `on the chain ${hre.network.name} (chainId: ${chalk.red(hre.ethers.provider.network.chainId)})`
     );
-    console.log(
-      `on the chain ${hre.network.name} (chainId: ${hre.ethers.provider.network.chainId})`
-    );
-    console.log(`Now deploy CrossChainIncrementor on the other chain`);
-    console.log("Then grant them permission to call CrossChainCounter");
+    console.log(`You can now deploy the ${chalk.blue('CrossChainIncrementor')} contract to another chain using the address above,`);
+    console.log(`then grant them a permission to make cross-chain calls by running ${chalk.underline('configure-counter')}`);
   });
 
 task("deploy-incrementor", "Deploys CrossChainIncrementor")
   .addParam(
     "counterAddress",
-    "The address of the CrossChainCounter on the given chain"
+    "Address of the CrossChainCounter contract on the given chain"
   )
   .addParam(
     "counterChainId",
@@ -47,8 +48,8 @@ task("deploy-incrementor", "Deploys CrossChainIncrementor")
   )
   .addOptionalParam(
     "deBridgeGateAddress",
-    "",
-    "0x43dE2d77BF8027e25dBD179B491e8d64f38398aA"
+    "Address of the deBridgeGate contract on the current chain (default value represents the mainnet address)",
+    DEFAULT_DEBRIDGE_ADDRESS
   )
   .setAction(async (args, hre) => {
     const Incrementor = (await hre.ethers.getContractFactory(
@@ -62,36 +63,31 @@ task("deploy-incrementor", "Deploys CrossChainIncrementor")
     await incrementor.deployed();
 
     console.log(
-      `The CrossChainIncrementor has been deployed at ${incrementor.address}`
+      chalk.blue('CrossChainIncrementor'),
+      `has been deployed at ${chalk.red(incrementor.address)}`,
+      `on the chain ${hre.network.name} (chainId: ${chalk.red(hre.ethers.provider.network.chainId)})`
     );
     console.log(
-      `on the chain ${hre.network.name} (chainId: ${hre.ethers.provider.network.chainId})`
-    );
-    console.log(`It will send commends to CrossChainCounter which is `);
-    console.log(
-      `deployed at ${args.counterAddress} on the chainId ${args.counterChainId}`
-    );
-    console.log(
-      `But first you need to enable CrossChainCounter to accept messages`
-    );
-    console.log(`from this newly deployed CrossChainIncrementor`);
+      `Now you probably need to grant it a permission to make cross-chain calls to the ${chalk.green('CrossChainCounter')} contract,`,
+      `run ${chalk.underline('configure-counter')} using the data above`
+    )
   });
 
 task(
   "configure-counter",
-  "Enables the given CrossChainCounter to accept commands from the given CrossChainIncrementor"
+  "Adds the given CrossChainIncrementor address as a trusted cross-chain caller for the given CrossChainCounter"
 )
   .addParam(
     "counterAddress",
-    "The address of the CrossChainCounter on the current chain"
+    "Address of the CrossChainCounter on the current chain"
   )
   .addParam(
     "incrementorAddress",
-    "The address of the CrossChainIncrementor on the given chain"
+    "Address of the CrossChainIncrementor on the given chain"
   )
   .addParam(
     "incrementorChainId",
-    "The chain ID where CrossChainIncrementor has been deployed"
+    "Chain ID where CrossChainIncrementor has been deployed"
   )
   .setAction(async (args, hre) => {
     const Counter = (await hre.ethers.getContractFactory(
@@ -106,25 +102,28 @@ task(
     await tx.wait();
 
     console.log(
-      `The CrossChainCounter can now accept calls coming from the CrossChainIncrementor`
+      `${chalk.green('CrossChainCounter')} can now accept cross-chain calls originating`,
+      `from the CrossChainIncrementor address ${args.incrementorAddress} from the chain id ${args.incrementorChainId}`
     );
-    console.log(`which is deployed on the ${args.incrementorChainId} chain `);
+    console.log(
+      `Run ${chalk.underline('send-increment')} to initiate your first cross-chain transaction!`
+    )
   });
 
 task(
   "send-increment",
-  "Asks CrossChainIncrementor on the given chain to increment CrossChainCounter's value by the given amount"
+  "Calls the CrossChainIncrementor contract on the given chain to construct and broadcast a call to increment CrossChainCounter's value by the given amount"
 )
   .addParam(
     "incrementorAddress",
-    "The address of the CrossChainIncrementor on the current chain"
+    "Address of the CrossChainIncrementor contract on the current chain"
   )
   .addOptionalParam(
     "incrementBy",
-    "The amount to increment CrossChainCounter's value by",
+    "Amount to increment CrossChainCounter's value by",
     "10"
   )
-  .addOptionalParam("executionFeeAmount", "", "0")
+  .addOptionalParam("executionFeeAmount", "Amount of ethers to bridge along with the message to incetivize a third party to execute a transaction on the destination chain", "0")
   .setAction(async (args, hre) => {
     const Incrementor = (await hre.ethers.getContractFactory(
       "CrossChainIncrementor"
@@ -145,14 +144,14 @@ task(
         value,
       }
     );
-    const receipt = tx.wait();
+    const receipt = await tx.wait();
 
-    console.log(`Tx has been submitted: ${(await receipt).transactionHash}`);
-    console.log("Looking for submission id");
+    console.log(`Tx has been included in the blockchain: ${chalk.red(receipt.transactionHash)}`);
+    console.log("Looking for deBridgeGate submission id...");
 
     const events = (await gate.queryFilter(gate.filters.Sent())) as SentEvent[];
-    const sentEvent = events.pop();
-    console.log("SubmissionID: ", sentEvent?.args.submissionId);
+    const sentEvent = events.reverse().find(ev => ev.transactionHash === receipt.transactionHash);
+    console.log("SubmissionID:", chalk.red(sentEvent?.args.submissionId));
   });
 
 task(
@@ -170,5 +169,5 @@ task(
     const counter = Counter.attach(args.counterAddress);
     const currentValue = (await counter.counter()) as BigNumber;
 
-    console.log("Current CrossChainCounter value: ", currentValue.toString());
+    console.log("Current CrossChainCounter value:", chalk.green(currentValue.toString()));
   });

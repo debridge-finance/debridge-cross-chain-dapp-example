@@ -1,8 +1,8 @@
 ## debridge-cross-chain-messaging-example
 
-A complete example of a conceptual cross-chain dApp which leverages the [deBridge protocol](https://debridge.finance) to send calls between its contracts across chains. This example is built on top of the Hardhat framework and the [`hardhat-debridge` plugin](https://github.com/debridge-finance/hardhat-debridge).
+A complete example of a conceptual cross-chain dApp which leverages the [deBridge protocol](https://debridge.finance) to send calls between its contracts across chains.
 
-This repository will help you understand how to write, test, emulate and run EVM contracts that are intended to rely on deBridge infrastructure.
+This example is built on top of the Hardhat framework and the [`hardhat-debridge` plugin](https://github.com/debridge-finance/hardhat-debridge). It will help you understand how to write, test, emulate and run EVM contracts that are intended to rely on deBridge infrastructure. Being a generic example, it may become the foundation for a limitless set of real world applications and protocols: object bridges, price feeds, automated cross-chain arbitraging services, and more. The sky is the limit!
 
 ### Introduction
 

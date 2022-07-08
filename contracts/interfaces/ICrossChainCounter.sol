@@ -25,7 +25,7 @@ interface ICrossChainCounter {
 
     struct ChainInfo {
         bool isSupported;
-        bytes crossChainIncrementorAddress;
+        bytes callerAddress;
     }
 
     /* ========== METHODS ========== */

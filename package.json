@@ -1,5 +1,5 @@
 {
-  "name": "debridge-cross-chain-messaging-example",
+  "name": "debridge-cross-chain-dapp-example",
   "version": "1.0.0",
   "description": "A complete example of a conceptual cross-chain dApp which leverages the deBridge protocol to send calls between its contracts across chains.",
   "main": "index.js",

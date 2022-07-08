@@ -37,6 +37,19 @@ This repository comes with a bunch of handy console commands to reproduce the af
 - `npx hardhat send-increment`
 - `npx hardhat read-increment`
 
+The best way to try them is to follow instructions from the `hardhat-debridge` plugin:
+1. Run the hardhat node in the first terminal: `npx hardhat node`;
+2. Run the emulator in the second terminal, attaching it to the hardhat node: `npx debridge-run-emulator --network localhost`;
+3. Call these commands one by one against the hardhat node (`--network localhost`) in the third terminal.
+
+#### Note on running against mainnet
+
+Trying these contracts on the mainnet is almost the same: you can use the same commands or use any other method to deploy and configure the contracts.
+
+It is important to remember that to finalize a cross-chain call (meaning that a broadcasted cross-chain message is being executed on the destination chain) a second transaction claiming the cross-chain message must be included to the destination chain. It can be done either:
+- automatically by supplying extra amount of native currency of the origin chain as an `executionFee`, enough to cover the costs of including the transaction to the destination chain;
+- manually on the [deExplorer](https://explorer.debridge.finance/), where you can find the proper cross-chain transaction by its `submissionId`;
+- programmatically, fetching validators' signatures and properly constructing the transaction to claim the cross-chain message. This is out of scope of this document, however [this diagram](./doc/Architecture.png) is a good starting point.
 
 ### Further reading
 

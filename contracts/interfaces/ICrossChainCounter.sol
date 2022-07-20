@@ -30,6 +30,8 @@ interface ICrossChainCounter {
 
     /* ========== METHODS ========== */
 
+    /// @dev _amount the amount to increment the property by
+    /// @dev _initiator we would like to track who called the Incrementor contract
     function receiveIncrementCommand(uint8 _amount, address _initiator)
         external;
 }

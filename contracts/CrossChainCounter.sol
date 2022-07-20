@@ -87,6 +87,7 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
 
     /* ========== PUBLIC METHODS: RECEIVING ========== */
 
+    /// @inheritdoc ICrossChainCounter
     function receiveIncrementCommand(uint8 _amount, address _initiator)
         external
         override

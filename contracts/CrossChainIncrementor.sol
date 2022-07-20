@@ -30,7 +30,13 @@ contract CrossChainIncrementor {
 
     /* ========== PUBLIC METHODS: SENDING ========== */
 
-    function increment(uint8 _amount, uint256 _executionFee) external payable {
+    function increment(uint8 _amount) external payable {
+        bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
+
+        _send(dstTxCall, 0);
+    }
+
+    function incrementWithIncludedGas(uint8 _amount, uint256 _executionFee) external payable {
         bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
 
         _send(dstTxCall, _executionFee);
@@ -58,7 +64,8 @@ contract CrossChainIncrementor {
 
         autoParams.executionFee = _executionFee;
 
-        // requested by onlyCrossChainLiquidityBridge()
+        // Exposing nativeSender must be requested explicitly
+        // We request it bc of CrossChainCounter's onlyCrossChainIncrementor modifier
         autoParams.flags = Flags.setFlag(
             autoParams.flags,
             Flags.PROXY_WITH_SENDER,

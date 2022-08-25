@@ -56,7 +56,7 @@ describe("CrossChainCounter and CrossChainIncrementor communication: basic", fun
     //
     // call CrossChainIncrementor on chain A
     //
-    await incrementor.increment(INCREMENT_BY, 0, {
+    await incrementor.increment(INCREMENT_BY, {
       // deBridge takes a fixed fee in the native currency of the blockchain, we need to pass it as a value
       value: await gate.globalFixedNativeFee(),
     });

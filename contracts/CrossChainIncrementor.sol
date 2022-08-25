@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@debridge-finance/contracts/contracts/libraries/Flags.sol";
-import "@debridge-finance/contracts/contracts/interfaces/IDeBridgeGate.sol";
+import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/libraries/Flags.sol";
+import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/interfaces/IDeBridgeGate.sol";
 
 import "./interfaces/ICrossChainCounter.sol";
 

@@ -1,3 +1,4 @@
+import { DeBridgeGate__factory } from "@debridge-finance/hardhat-debridge/dist/typechain";
 import chalk from "chalk";
 import { BigNumber } from "ethers";
 import { task } from "hardhat/config";
@@ -7,7 +8,6 @@ import {
   CrossChainCounter__factory,
   CrossChainIncrementor,
   CrossChainIncrementor__factory,
-  DeBridgeGate__factory,
 } from "../../typechain";
 import { SentEvent } from "../../typechain/IDeBridgeGate";
 
@@ -104,10 +104,11 @@ task(
     "Chain ID where CrossChainIncrementor has been deployed"
   )
   .setAction(async (args, hre) => {
-    const Counter = (await hre.ethers.getContractFactory(
-      "CrossChainCounter"
-    )) as CrossChainCounter__factory;
-    const counter = Counter.attach(args.counterAddress);
+    const [signer] = await hre.ethers.getSigners();
+    const counter = CrossChainCounter__factory.connect(
+      args.counterAddress,
+      signer
+    );
 
     const tx = await counter.addChainSupport(
       args.incrementorChainId,
@@ -147,15 +148,16 @@ task(
     "0"
   )
   .setAction(async (args, hre) => {
-    const Incrementor = (await hre.ethers.getContractFactory(
-      "CrossChainIncrementor"
-    )) as CrossChainIncrementor__factory;
-    const incrementor = Incrementor.attach(args.incrementorAddress);
+    const [signer] = await hre.ethers.getSigners();
 
-    const Gate = (await hre.ethers.getContractFactory(
-      "DeBridgeGate"
-    )) as DeBridgeGate__factory;
-    const gate = Gate.attach(await incrementor.deBridgeGate());
+    const incrementor = CrossChainIncrementor__factory.connect(
+      args.incrementorAddress,
+      signer
+    );
+
+    const gate = DeBridgeGate__factory.connect(
+      await incrementor.deBridgeGate(),
+      signer)
 
     const protocolFee = await gate.globalFixedNativeFee();
     const value = protocolFee.add(BigNumber.from(args.executionFeeAmount));
@@ -191,10 +193,12 @@ task(
     "The address of the CrossChainCounter on the current chain"
   )
   .setAction(async (args, hre) => {
-    const Counter = (await hre.ethers.getContractFactory(
-      "CrossChainCounter"
-    )) as CrossChainCounter__factory;
-    const counter = Counter.attach(args.counterAddress);
+    const [signer] = await hre.ethers.getSigners();
+
+    const counter = CrossChainCounter__factory.connect(
+      args.counterAddress,
+      signer
+    );
     const currentValue = (await counter.counter()) as BigNumber;
 
     console.log(

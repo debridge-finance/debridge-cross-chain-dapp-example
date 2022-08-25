@@ -1,3 +1,4 @@
+import { DeBridgeGate } from "@debridge-finance/hardhat-debridge/dist/typechain";
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { deBridge, ethers } from "hardhat";
@@ -7,7 +8,6 @@ import {
   CrossChainCounter__factory,
   CrossChainIncrementor,
   CrossChainIncrementor__factory,
-  DeBridgeGate,
 } from "../typechain";
 
 interface TestSuiteState {
@@ -59,7 +59,7 @@ describe("CrossChainCounter and CrossChainIncrementor communication: sanity chec
   });
 
   it("CrossChainCounter is being incremented by the CrossChainIncrementor request", async function () {
-    await contracts.incrementor.increment(INCREMENT_BY, 0, {
+    await contracts.incrementor.increment(INCREMENT_BY, {
       value: contracts.gateProtocolFee,
     });
 
@@ -69,7 +69,7 @@ describe("CrossChainCounter and CrossChainIncrementor communication: sanity chec
   });
 
   it("CrossChainCounter is being incremented by the CrossChainIncrementor request (second request)", async function () {
-    await contracts.incrementor.increment(INCREMENT_BY, 0, {
+    await contracts.incrementor.increment(INCREMENT_BY, {
       value: contracts.gateProtocolFee,
     });
 
@@ -86,7 +86,10 @@ describe("CrossChainCounter and CrossChainIncrementor communication: sanity chec
         INCREMENT_BY,
         ethers.constants.AddressZero /*not used*/
       )
-    ).to.revertedWith("CallProxyBadRole");
+    ).to.revertedWith("" /*CallProxyBadRole*/);
+    // hardhat cannot decode the error because DeBridgeGate contract (which
+    // is deployed by the hardhat-debridge plugin) is not presented as an artifact
+    // within this hardhat instance
   });
 
   it("CrossChainCounter rejects a broadcasted call from non-approved native sender", async () => {
@@ -103,16 +106,19 @@ describe("CrossChainCounter and CrossChainIncrementor communication: sanity chec
     )) as CrossChainIncrementor;
     await maliciousIncrementor.deployed();
 
-    await maliciousIncrementor.increment(INCREMENT_BY, 0, {
+    await maliciousIncrementor.increment(INCREMENT_BY, {
       value: contracts.gateProtocolFee,
     });
 
     // CrossChainCounter rejects all calls from deBridgeGate's CallProxy that
     // where initiated from unknown (non-trusted) contract on the supported chain
-    // with raising NativeSenderBadRole() error.
-    // However, CallProxy handles this error and reverts another one: ExternalCallFailed
-    await expect(deBridge.emulator.autoClaim()).to.be.revertedWith(
-      "ExternalCallFailed"
-    );
+    // with NativeSenderBadRole() error raised.
+    // However, CallProxy handles this error gracefully and
+    // reverts another one: ExternalCallFailed()
+    await expect(deBridge.emulator.autoClaim())
+      .to.revertedWith("" /*ExternalCallFailed*/)
+    // hardhat cannot decode the error because DeBridgeGate contract (which
+    // is deployed by the hardhat-debridge plugin) is not presented as an artifact
+    // within this hardhat instance
   });
 });

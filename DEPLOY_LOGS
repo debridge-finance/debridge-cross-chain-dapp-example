@@ -3,16 +3,16 @@ CrossChainCounter has been deployed at 0xCa763D7f18cb1379A6184c22c42Adf631af1034
 You can now deploy the CrossChainIncrementor contract to another chain using the address above by calling deploy-incrementor,
 then grant them a permission to make cross-chain calls by running configure-counter
 ~/dev/deBridge/example [master|✚2] ❯❯❯ hh deploy-incrementor --network bnb
-CrossChainIncrementor has been deployed at 0x1D17Bd50904f2d8cb102da92D14800AB2fEb119B on the chain bnb (chainId: 56)
+CrossChainIncrementor has been deployed at 0x18634bd8F665Fe8B7537D1A0909B56835D3A648e on the chain bnb (chainId: 56)
 You can now configure the newly deployed CrossChainIncrementor by calling the configure-incrementor.
 Then you probably need to grant it a permission to make cross-chain calls to the CrossChainCounter contract by  running configure-counter
-~/dev/deBridge/example [master|✚2] ❯❯❯ hh configure-incrementor --network bnb --incrementor-address 0x1D17Bd50904f2d8cb102da92D14800AB2fEb119B --de-bridge-gate-address 0x43dE2d77BF8027e25dBD179B491e8d64f38398aA --counter-address 0xCa763D7f18cb1379A6184c22c42Adf631af10342 --counter-chain-id 43114
+~/dev/deBridge/example [master|✚2] ❯❯❯ hh configure-incrementor --network bnb --incrementor-address 0x18634bd8F665Fe8B7537D1A0909B56835D3A648e --de-bridge-gate-address 0x43dE2d77BF8027e25dBD179B491e8d64f38398aA --counter-address 0xCa763D7f18cb1379A6184c22c42Adf631af10342 --counter-chain-id 43114
 CrossChainIncrementor has been configured to call Counter (0xCa763D7f18cb1379A6184c22c42Adf631af10342, chainId: 43114) via the deBridgeGate contract (0x43dE2d77BF8027e25dBD179B491e8d64f38398aA)
 Now probably need to grant it a permission to make cross-chain calls to the CrossChainCounter contract by  running configure-counter
-~/dev/deBridge/example [master|✚2] ❯❯❯ hh configure-counter --network avalanche --counter-address 0xCa763D7f18cb1379A6184c22c42Adf631af10342 --de-bridge-gate-address 0x43dE2d77BF8027e25dBD179B491e8d64f38398aA --incrementor-address 0x1D17Bd50904f2d8cb102da92D14800AB2fEb119B --incrementor-chain-id 56
-CrossChainCounter can now accept cross-chain calls originating from the CrossChainIncrementor address 0x1D17Bd50904f2d8cb102da92D14800AB2fEb119B from the chain id 56
+~/dev/deBridge/example [master|✚2] ❯❯❯ hh configure-counter --network avalanche --counter-address 0xCa763D7f18cb1379A6184c22c42Adf631af10342 --de-bridge-gate-address 0x43dE2d77BF8027e25dBD179B491e8d64f38398aA --incrementor-address 0x18634bd8F665Fe8B7537D1A0909B56835D3A648e --incrementor-chain-id 56
+CrossChainCounter can now accept cross-chain calls originating from the CrossChainIncrementor address 0x18634bd8F665Fe8B7537D1A0909B56835D3A648e from the chain id 56
 Run send-increment to initiate your first cross-chain transaction!
-~/dev/deBridge/example [master|✚2] ❯❯❯ hh send-increment --network bnb --incrementor-address 0x1D17Bd50904f2d8cb102da92D14800AB2fEb119B --increment-by 1
+~/dev/deBridge/example [master|✚2] ❯❯❯ hh send-increment --network bnb --incrementor-address 0x18634bd8F665Fe8B7537D1A0909B56835D3A648e --increment-by 1
 Tx has been included in the blockchain: 0x9649b14d975efbe29393dafab9b50a9c72b3686658b8431cf86a55c7531cb90e
 Looking for deBridgeGate submission id...
 SubmissionId: 0xd36e46c103c789713a06d5722eec1467bb2de83533fcdcedee8db7a2addcbc65

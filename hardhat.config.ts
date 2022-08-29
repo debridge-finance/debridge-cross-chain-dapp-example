@@ -4,14 +4,12 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
-import 'dotenv/config';
+import "dotenv/config";
 import { HardhatUserConfig } from "hardhat/config";
 
 import "./src/tasks/deployment";
 
-const accounts = process.env.DEPLOYER
-  ? [`${process.env.DEPLOYER}`]
-  : []
+const accounts = process.env.DEPLOYER ? [`${process.env.DEPLOYER}`] : [];
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -39,7 +37,7 @@ const config: HardhatUserConfig = {
     },
     bnb: {
       chainId: 56,
-      url: process.env.RPC_BNB ||"https://bsc-dataseed.binance.org",
+      url: process.env.RPC_BNB || "https://bsc-dataseed.binance.org",
       accounts,
     },
   },
@@ -48,8 +46,8 @@ const config: HardhatUserConfig = {
       polygon: `${process.env.ETHERSCAN_POLYGON_API_KEY}`,
       arbitrumOne: `${process.env.ETHERSCAN_ARBITRUMONE_API_KEY}`,
       bsc: `${process.env.ETHERSCAN_BSC_API_KEY}`,
-    }
-  }
+    },
+  },
 };
 
 export default config;

@@ -28,9 +28,7 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
     /// @dev Restricts calls made by deBridge's CallProxy
     ///         AND that are originating from the whitelisted CrossChainCounter address on the origin chain
     modifier onlyCrossChainIncrementor() {
-        ICallProxy callProxy = ICallProxy(
-            deBridgeGate.callProxy()
-        );
+        ICallProxy callProxy = ICallProxy(deBridgeGate.callProxy());
 
         // caller is CallProxy?
         if (address(callProxy) != msg.sender) {
@@ -63,7 +61,10 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
 
     /* ========== MAINTENANCE METHODS ========== */
 
-    function setDeBridgeGate(IDeBridgeGateExtended deBridgeGate_) external onlyAdmin {
+    function setDeBridgeGate(IDeBridgeGateExtended deBridgeGate_)
+        external
+        onlyAdmin
+    {
         deBridgeGate = deBridgeGate_;
     }
 
@@ -71,8 +72,7 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
         uint256 _chainId,
         bytes memory _crossChainIncrementorAddress
     ) external onlyAdmin {
-        supportedChains[_chainId]
-            .callerAddress = _crossChainIncrementorAddress;
+        supportedChains[_chainId].callerAddress = _crossChainIncrementorAddress;
         supportedChains[_chainId].isSupported = true;
 
         emit SupportedChainAdded(_chainId, _crossChainIncrementorAddress);
@@ -93,7 +93,8 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
     {
         counter += _amount;
 
-        uint256 chainIdFrom = ICallProxy(deBridgeGate.callProxy()).submissionChainIdFrom();
+        uint256 chainIdFrom = ICallProxy(deBridgeGate.callProxy())
+            .submissionChainIdFrom();
         emit CounterIncremented(counter, _amount, chainIdFrom, _initiator);
     }
 }

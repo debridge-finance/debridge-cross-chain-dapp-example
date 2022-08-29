@@ -46,7 +46,10 @@ describe("CrossChainCounter and CrossChainIncrementor communication: basic", fun
     await incrementor.deployed();
 
     await incrementor.setDeBridgeGate(gate.address);
-    await incrementor.addCounter(ethers.provider.network.chainId, counter.address);
+    await incrementor.addCounter(
+      ethers.provider.network.chainId,
+      counter.address
+    );
 
     await counter.addChainSupport(
       ethers.provider.network.chainId,

@@ -7,7 +7,7 @@ import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/interfaces/
 
 import "./interfaces/ICrossChainCounter.sol";
 
-contract CrossChainIncrementor is AccessControl{
+contract CrossChainIncrementor is AccessControl {
     /// @dev DeBridgeGate's address on the current chain
     IDeBridgeGateExtended public deBridgeGate;
 
@@ -28,14 +28,16 @@ contract CrossChainIncrementor is AccessControl{
 
     /* ========== INITIALIZERS ========== */
 
-    constructor(
-    ) {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /* ========== MAINTENANCE METHODS ========== */
 
-    function setDeBridgeGate(IDeBridgeGateExtended deBridgeGate_) external onlyAdmin {
+    function setDeBridgeGate(IDeBridgeGateExtended deBridgeGate_)
+        external
+        onlyAdmin
+    {
         deBridgeGate = deBridgeGate_;
     }
 
@@ -50,7 +52,7 @@ contract CrossChainIncrementor is AccessControl{
     /* ========== PUBLIC METHODS: SENDING ========== */
 
     function increment(uint8 _amount) external payable {
-        uint fee = deBridgeGate.globalFixedNativeFee();
+        uint256 fee = deBridgeGate.globalFixedNativeFee();
         require(msg.value >= fee, "fee not covered by the msg.value");
 
         bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
@@ -58,9 +60,15 @@ contract CrossChainIncrementor is AccessControl{
         _send(dstTxCall, 0);
     }
 
-    function incrementWithIncludedGas(uint8 _amount, uint256 _executionFee) external payable {
-        uint fee = deBridgeGate.globalFixedNativeFee();
-        require(msg.value >= (fee + _executionFee), "fee not covered by the msg.value");
+    function incrementWithIncludedGas(uint8 _amount, uint256 _executionFee)
+        external
+        payable
+    {
+        uint256 fee = deBridgeGate.globalFixedNativeFee();
+        require(
+            msg.value >= (fee + _executionFee),
+            "fee not covered by the msg.value"
+        );
 
         bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
 

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.7;
 
 interface ICrossChainCounter {
-
     /* ========== EVENTS ========== */
 
     event SupportedChainAdded(uint256 chainId, bytes incrementorAddress);
@@ -10,7 +9,7 @@ interface ICrossChainCounter {
     event CounterIncremented(
         uint256 newCounterValue,
         uint8 amount,
-        uint chainFrom,
+        uint256 chainFrom,
         address initiator
     );
 

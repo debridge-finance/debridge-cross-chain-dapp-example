@@ -33,6 +33,7 @@ Tests are leveraging the [`hardhat-debridge` plugin](https://github.com/debridge
 This repository comes with a bunch of handy console commands to reproduce the aforementioned flow, either on the deBridge emulator (a part of `hardhat-debridge` plugin) or even on the mainnet chain. Available commands:
 - `npx hardhat deploy-counter`
 - `npx hardhat deploy-incrementor`
+- `npx hardhat configure-incrementor`
 - `npx hardhat configure-counter`
 - `npx hardhat send-increment`
 - `npx hardhat read-increment`

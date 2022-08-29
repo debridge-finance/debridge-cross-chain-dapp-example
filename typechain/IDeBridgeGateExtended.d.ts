@@ -29,6 +29,7 @@ interface IDeBridgeGateExtendedInterface extends ethers.utils.Interface {
     "getDefiAvaliableReserves(address)": FunctionFragment;
     "getNativeInfo(address)": FunctionFragment;
     "globalFixedNativeFee()": FunctionFragment;
+    "globalTransferFeeBps()": FunctionFragment;
     "isSubmissionUsed(bytes32)": FunctionFragment;
     "requestReserves(address,uint256)": FunctionFragment;
     "returnReserves(address,uint256)": FunctionFragment;
@@ -67,6 +68,10 @@ interface IDeBridgeGateExtendedInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "globalFixedNativeFee",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "globalTransferFeeBps",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -116,6 +121,10 @@ interface IDeBridgeGateExtendedInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "globalFixedNativeFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "globalTransferFeeBps",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -406,6 +415,10 @@ export class IDeBridgeGateExtended extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    globalTransferFeeBps(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     isSubmissionUsed(
       submissionId: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -484,6 +497,10 @@ export class IDeBridgeGateExtended extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  globalTransferFeeBps(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   isSubmissionUsed(
     submissionId: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -559,6 +576,8 @@ export class IDeBridgeGateExtended extends BaseContract {
     >;
 
     globalFixedNativeFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+    globalTransferFeeBps(overrides?: CallOverrides): Promise<BigNumber>;
 
     isSubmissionUsed(
       submissionId: BytesLike,
@@ -1083,6 +1102,10 @@ export class IDeBridgeGateExtended extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    globalTransferFeeBps(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     isSubmissionUsed(
       submissionId: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1159,6 +1182,10 @@ export class IDeBridgeGateExtended extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     globalFixedNativeFee(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    globalTransferFeeBps(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

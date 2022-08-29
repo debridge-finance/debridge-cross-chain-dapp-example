@@ -205,6 +205,7 @@ task(
 
     const protocolFee = await gate.globalFixedNativeFee();
     const value = protocolFee.add(BigNumber.from(args.executionFeeAmount));
+    console.log({value, protocolFee, fee: args.executionFeeAmount})
     const tx = await incrementor.incrementWithIncludedGas(
       args.incrementBy,
       args.executionFeeAmount,

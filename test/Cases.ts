@@ -1,6 +1,7 @@
 import { DeBridgeGate } from "@debridge-finance/hardhat-debridge/dist/typechain";
 import { expect } from "chai";
 import { BigNumber } from "ethers";
+import { parseEther } from "ethers/lib/utils";
 import { deBridge, ethers } from "hardhat";
 
 import {
@@ -78,6 +79,20 @@ describe("CrossChainCounter and CrossChainIncrementor communication: sanity chec
     await deBridge.emulator.autoClaim();
 
     expect(await contracts.counter.counter()).to.be.eq(INCREMENT_BY * 2);
+  });
+
+  it("CrossChainCounter is being incremented by the CrossChainIncrementor with exFee", async function () {
+    const protocolFee = await contracts.gateProtocolFee;
+    const exFee = parseEther('0.1');
+    const value = exFee.add(protocolFee);
+
+    await contracts.incrementor.incrementWithIncludedGas(INCREMENT_BY, exFee, {
+      value
+    });
+
+    await deBridge.emulator.autoClaim();
+
+    expect(await contracts.counter.counter()).to.be.eq(INCREMENT_BY * 3);
   });
 
   it("CrossChainCounter rejects direct call", async () => {

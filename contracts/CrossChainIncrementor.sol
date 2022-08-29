@@ -52,9 +52,6 @@ contract CrossChainIncrementor is AccessControl {
     /* ========== PUBLIC METHODS: SENDING ========== */
 
     function increment(uint8 _amount) external payable {
-        uint256 fee = deBridgeGate.globalFixedNativeFee();
-        require(msg.value >= fee, "fee not covered by the msg.value");
-
         bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
 
         _send(dstTxCall, 0);
@@ -64,12 +61,6 @@ contract CrossChainIncrementor is AccessControl {
         external
         payable
     {
-        uint256 fee = deBridgeGate.globalFixedNativeFee();
-        require(
-            msg.value >= (fee + _executionFee),
-            "fee not covered by the msg.value"
-        );
-
         bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
 
         _send(dstTxCall, _executionFee);
@@ -93,9 +84,30 @@ contract CrossChainIncrementor is AccessControl {
     function _send(bytes memory _dstTransactionCall, uint256 _executionFee)
         internal
     {
+        //
+        // sanity checks
+        //
+        uint256 protocolFee = deBridgeGate.globalFixedNativeFee();
+        require(
+            msg.value >= (protocolFee + _executionFee),
+            "fees not covered by the msg.value"
+        );
+
+        // we bridge as much asset as specified in the _executionFee arg
+        // (i.e. bridging the minimum necessary amount to to cover the cost of execution)
+        // However, deBridge cuts a small fee off the bridged asset, so
+        // we must ensure that executionFee < amountToBridge
+        uint assetFeeBps = deBridgeGate.globalTransferFeeBps();
+        uint amountToBridge = _executionFee;
+        uint amountAfterBridge = amountToBridge * (10000 - assetFeeBps) / 10000;
+
+        //
+        // start configuring a message
+        //
         IDeBridgeGate.SubmissionAutoParamsTo memory autoParams;
 
-        autoParams.executionFee = _executionFee;
+        // use the whole amountAfterBridge as the execution fee to be paid to the executor
+        autoParams.executionFee = amountAfterBridge;
 
         // Exposing nativeSender must be requested explicitly
         // We request it bc of CrossChainCounter's onlyCrossChainIncrementor modifier
@@ -117,7 +129,7 @@ contract CrossChainIncrementor is AccessControl {
 
         deBridgeGate.send{value: msg.value}(
             address(0), // _tokenAddress
-            _executionFee, // _amount
+            amountToBridge, // _amount
             crossChainCounterResidenceChainID, // _chainIdTo
             abi.encodePacked(crossChainCounterResidenceAddress), // _receiver
             "", // _permit

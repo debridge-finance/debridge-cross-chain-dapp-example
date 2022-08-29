@@ -40,12 +40,18 @@ const config: HardhatUserConfig = {
       url: process.env.RPC_BNB || "https://bsc-dataseed.binance.org",
       accounts,
     },
+    avalanche: {
+      chainId: 43114,
+      url: process.env.RPC_AVALANCHE || "https://api.avax.network/ext/bc/C/rpc",
+      accounts,
+    },
   },
   etherscan: {
     apiKey: {
       polygon: `${process.env.ETHERSCAN_POLYGON_API_KEY}`,
       arbitrumOne: `${process.env.ETHERSCAN_ARBITRUMONE_API_KEY}`,
       bsc: `${process.env.ETHERSCAN_BSC_API_KEY}`,
+      avalanche: `${process.env.ETHERSCAN_AVAX_API_KEY}`,
     },
   },
 };

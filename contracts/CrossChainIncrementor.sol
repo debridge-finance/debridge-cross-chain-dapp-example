@@ -2,13 +2,13 @@
 pragma solidity ^0.8.7;
 
 import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/libraries/Flags.sol";
-import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/interfaces/IDeBridgeGate.sol";
+import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/interfaces/IDeBridgeGateExtended.sol";
 
 import "./interfaces/ICrossChainCounter.sol";
 
 contract CrossChainIncrementor {
     /// @dev DeBridgeGate's address on the current chain
-    IDeBridgeGate public deBridgeGate;
+    IDeBridgeGateExtended public deBridgeGate;
 
     /// @dev Chain ID where the cross-chain counter contract has been deployed
     uint256 crossChainCounterResidenceChainID;
@@ -19,7 +19,7 @@ contract CrossChainIncrementor {
     /* ========== INITIALIZERS ========== */
 
     constructor(
-        IDeBridgeGate deBridgeGate_,
+        IDeBridgeGateExtended deBridgeGate_,
         uint256 crossChainCounterResidenceChainID_,
         address crossChainCounterResidenceAddress_
     ) {
@@ -31,12 +31,18 @@ contract CrossChainIncrementor {
     /* ========== PUBLIC METHODS: SENDING ========== */
 
     function increment(uint8 _amount) external payable {
+        uint fee = deBridgeGate.globalFixedNativeFee();
+        require(msg.value >= fee, "fee not covered by the msg.value");
+
         bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
 
         _send(dstTxCall, 0);
     }
 
     function incrementWithIncludedGas(uint8 _amount, uint256 _executionFee) external payable {
+        uint fee = deBridgeGate.globalFixedNativeFee();
+        require(msg.value >= (fee + _executionFee), "fee not covered by the msg.value");
+
         bytes memory dstTxCall = _encodeReceiveCommand(_amount, msg.sender);
 
         _send(dstTxCall, _executionFee);
@@ -84,7 +90,7 @@ contract CrossChainIncrementor {
 
         deBridgeGate.send{value: msg.value}(
             address(0), // _tokenAddress
-            msg.value, // _amount
+            _executionFee, // _amount
             crossChainCounterResidenceChainID, // _chainIdTo
             abi.encodePacked(crossChainCounterResidenceAddress), // _receiver
             "", // _permit

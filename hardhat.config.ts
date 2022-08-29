@@ -4,9 +4,14 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
+import 'dotenv/config';
 import { HardhatUserConfig } from "hardhat/config";
 
 import "./src/tasks/deployment";
+
+const accounts = process.env.DEPLOYER
+  ? [`${process.env.DEPLOYER}`]
+  : []
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -25,6 +30,17 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
+    },
+    polygon: {
+      chainId: 137,
+      url: process.env.RPC_POLYGON || "https://polygon-rpc.com/",
+      accounts,
+      // gasPrice: 50e9,
+    },
+    bnb: {
+      chainId: 56,
+      url: process.env.RPC_BNB ||"https://bsc-dataseed.binance.org",
+      accounts,
     },
   },
 };

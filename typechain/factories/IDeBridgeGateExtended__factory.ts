@@ -629,6 +629,19 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "globalFixedNativeFee",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "bytes32",

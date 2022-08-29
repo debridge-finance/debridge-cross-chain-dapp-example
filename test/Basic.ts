@@ -35,18 +35,18 @@ describe("CrossChainCounter and CrossChainIncrementor communication: basic", fun
     const Counter = (await ethers.getContractFactory(
       "CrossChainCounter"
     )) as CrossChainCounter__factory;
-    const counter = (await Counter.deploy(gate.address)) as CrossChainCounter;
+    const counter = (await Counter.deploy()) as CrossChainCounter;
     await counter.deployed();
+    await counter.setDeBridgeGate(gate.address);
 
     const Incrementor = (await ethers.getContractFactory(
       "CrossChainIncrementor"
     )) as CrossChainIncrementor__factory;
-    const incrementor = (await Incrementor.deploy(
-      gate.address,
-      ethers.provider.network.chainId,
-      counter.address
-    )) as CrossChainIncrementor;
+    const incrementor = (await Incrementor.deploy()) as CrossChainIncrementor;
     await incrementor.deployed();
+
+    await incrementor.setDeBridgeGate(gate.address);
+    await incrementor.addCounter(ethers.provider.network.chainId, counter.address);
 
     await counter.addChainSupport(
       ethers.provider.network.chainId,

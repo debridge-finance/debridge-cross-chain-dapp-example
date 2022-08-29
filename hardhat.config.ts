@@ -43,6 +43,13 @@ const config: HardhatUserConfig = {
       accounts,
     },
   },
+  etherscan: {
+    apiKey: {
+      polygon: `${process.env.ETHERSCAN_POLYGON_API_KEY}`,
+      arbitrumOne: `${process.env.ETHERSCAN_ARBITRUMONE_API_KEY}`,
+      bsc: `${process.env.ETHERSCAN_BSC_API_KEY}`,
+    }
+  }
 };
 
 export default config;

@@ -57,12 +57,15 @@ contract CrossChainCounter is AccessControl, ICrossChainCounter {
 
     /* ========== INITIALIZERS ========== */
 
-    constructor(IDeBridgeGateExtended deBridgeGate_) {
-        deBridgeGate = deBridgeGate_;
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /* ========== MAINTENANCE METHODS ========== */
+
+    function setDeBridgeGate(IDeBridgeGateExtended deBridgeGate_) external onlyAdmin {
+        deBridgeGate = deBridgeGate_;
+    }
 
     function addChainSupport(
         uint256 _chainId,

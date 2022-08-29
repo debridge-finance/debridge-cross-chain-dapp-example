@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/libraries/Flags.sol";
 import "@debridge-finance/debridge-protocol-evm-interfaces/contracts/interfaces/IDeBridgeGateExtended.sol";
 
 import "./interfaces/ICrossChainCounter.sol";
 
-contract CrossChainIncrementor {
+contract CrossChainIncrementor is AccessControl{
     /// @dev DeBridgeGate's address on the current chain
     IDeBridgeGateExtended public deBridgeGate;
 
@@ -16,14 +17,32 @@ contract CrossChainIncrementor {
     /// @dev Address of the cross-chain counter contract (on the `crossChainCounterResidenceChainID` chain)
     address crossChainCounterResidenceAddress;
 
+    error AdminBadRole();
+
+    /* ========== MODIFIERS ========== */
+
+    modifier onlyAdmin() {
+        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert AdminBadRole();
+        _;
+    }
+
     /* ========== INITIALIZERS ========== */
 
     constructor(
-        IDeBridgeGateExtended deBridgeGate_,
+    ) {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /* ========== MAINTENANCE METHODS ========== */
+
+    function setDeBridgeGate(IDeBridgeGateExtended deBridgeGate_) external onlyAdmin {
+        deBridgeGate = deBridgeGate_;
+    }
+
+    function addCounter(
         uint256 crossChainCounterResidenceChainID_,
         address crossChainCounterResidenceAddress_
-    ) {
-        deBridgeGate = deBridgeGate_;
+    ) external onlyAdmin {
         crossChainCounterResidenceChainID = crossChainCounterResidenceChainID_;
         crossChainCounterResidenceAddress = crossChainCounterResidenceAddress_;
     }

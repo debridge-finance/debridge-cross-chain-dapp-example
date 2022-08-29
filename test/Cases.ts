@@ -24,18 +24,19 @@ async function deployContracts(): Promise<TestSuiteState> {
   const Counter = (await ethers.getContractFactory(
     "CrossChainCounter"
   )) as CrossChainCounter__factory;
-  const counter = (await Counter.deploy(gate.address)) as CrossChainCounter;
+  const counter = (await Counter.deploy()) as CrossChainCounter;
   await counter.deployed();
+  await counter.setDeBridgeGate(gate.address);
 
   const Incrementor = (await ethers.getContractFactory(
     "CrossChainIncrementor"
   )) as CrossChainIncrementor__factory;
-  const incrementor = (await Incrementor.deploy(
-    gate.address,
-    ethers.provider.network.chainId,
-    counter.address
-  )) as CrossChainIncrementor;
+  const incrementor = (await Incrementor.deploy()) as CrossChainIncrementor;
   await incrementor.deployed();
+  await incrementor.setDeBridgeGate(gate.address);
+  await incrementor.addCounter(
+    ethers.provider.network.chainId,
+    counter.address);
 
   await counter.addChainSupport(
     ethers.provider.network.chainId,
@@ -100,11 +101,12 @@ describe("CrossChainCounter and CrossChainIncrementor communication: sanity chec
       "CrossChainIncrementor"
     )) as CrossChainIncrementor__factory;
     const maliciousIncrementor = (await MaliciousIncrementor.deploy(
-      contracts.gate.address,
-      ethers.provider.network.chainId,
-      contracts.counter.address
     )) as CrossChainIncrementor;
     await maliciousIncrementor.deployed();
+    await maliciousIncrementor.setDeBridgeGate(contracts.gate.address);
+    await maliciousIncrementor.addCounter(
+      ethers.provider.network.chainId,
+      contracts.counter.address);
 
     await maliciousIncrementor.increment(INCREMENT_BY, {
       value: contracts.gateProtocolFee,

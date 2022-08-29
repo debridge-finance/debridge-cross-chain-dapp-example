@@ -14,18 +14,11 @@ import { SentEvent } from "../../typechain/IDeBridgeGate";
 const DEFAULT_DEBRIDGE_ADDRESS = "0x43dE2d77BF8027e25dBD179B491e8d64f38398aA";
 
 task("deploy-counter", "Deploys CrossChainCounter")
-  .addOptionalParam(
-    "deBridgeGateAddress",
-    "Address of the deBridgeGate contract on the current chain (default value represents the mainnet address)",
-    DEFAULT_DEBRIDGE_ADDRESS
-  )
   .setAction(async (args, hre) => {
     const Counter = (await hre.ethers.getContractFactory(
       "CrossChainCounter"
     )) as CrossChainCounter__factory;
-    const counter = (await Counter.deploy(
-      args.deBridgeGateAddress
-    )) as CrossChainCounter;
+    const counter = (await Counter.deploy()) as CrossChainCounter;
     await counter.deployed();
 
     console.log(
@@ -38,7 +31,9 @@ task("deploy-counter", "Deploys CrossChainCounter")
     console.log(
       `You can now deploy the ${chalk.blue(
         "CrossChainIncrementor"
-      )} contract to another chain using the address above,`
+      )} contract to another chain using the address above by calling ${chalk.underline(
+        "deploy-incrementor"
+      )}, `
     );
     console.log(
       `then grant them a permission to make cross-chain calls by running ${chalk.underline(
@@ -48,6 +43,37 @@ task("deploy-counter", "Deploys CrossChainCounter")
   });
 
 task("deploy-incrementor", "Deploys CrossChainIncrementor")
+  .setAction(async (args, hre) => {
+    const Incrementor = (await hre.ethers.getContractFactory(
+      "CrossChainIncrementor"
+    )) as CrossChainIncrementor__factory;
+    const incrementor = (await Incrementor.deploy()) as CrossChainIncrementor;
+    await incrementor.deployed();
+
+    console.log(
+      chalk.blue("CrossChainIncrementor"),
+      `has been deployed at ${chalk.red(incrementor.address)}`,
+      `on the chain ${hre.network.name} (chainId: ${chalk.red(
+        hre.ethers.provider.network.chainId
+      )})`
+    );
+    console.log(`You can now configure the newly deployed CrossChainIncrementor by calling the ${chalk.underline(
+      'configure-incrementor'
+    )}.`)
+    console.log(
+      `Now you probably need to grant it a permission to make cross-chain calls to the ${chalk.green(
+        "CrossChainCounter"
+      )} contract,`,
+      `run ${chalk.underline("configure-counter")} using the data above`
+    );
+  });
+
+
+task("configure-incrementor", "Configures CrossChainIncrementor by setting the deBridgeGate contract address as well as the target Counter contract and chainId")
+  .addParam(
+    "incrementorAddress",
+    "Address of the CrossChainIncrementor contract on the current chain"
+  )
   .addParam(
     "counterAddress",
     "Address of the CrossChainCounter contract on the given chain"
@@ -62,28 +88,22 @@ task("deploy-incrementor", "Deploys CrossChainIncrementor")
     DEFAULT_DEBRIDGE_ADDRESS
   )
   .setAction(async (args, hre) => {
-    const Incrementor = (await hre.ethers.getContractFactory(
-      "CrossChainIncrementor"
-    )) as CrossChainIncrementor__factory;
-    const incrementor = (await Incrementor.deploy(
-      args.deBridgeGateAddress,
-      args.counterChainId,
-      args.counterAddress
-    )) as CrossChainIncrementor;
-    await incrementor.deployed();
+    const [signer] = await hre.ethers.getSigners();
+    const incrementor = CrossChainIncrementor__factory.connect(
+      args.incrementorAddress,
+      signer
+    );
+
+    const tx1 = await incrementor.setDeBridgeGate(args.deBridgeGateAddress);
+    await tx1.wait();
+
+    const tx2 = await incrementor.addCounter(args.counterChainId, args.counterAddress);
+    await tx2.wait();
 
     console.log(
       chalk.blue("CrossChainIncrementor"),
-      `has been deployed at ${chalk.red(incrementor.address)}`,
-      `on the chain ${hre.network.name} (chainId: ${chalk.red(
-        hre.ethers.provider.network.chainId
-      )})`
-    );
-    console.log(
-      `Now you probably need to grant it a permission to make cross-chain calls to the ${chalk.green(
-        "CrossChainCounter"
-      )} contract,`,
-      `run ${chalk.underline("configure-counter")} using the data above`
+      `has been configured to call Counter (${args.counterAddress}, chainId: ${args.counterChainId})`,
+      `via the deBridgeGate contract (${args.deBridgeGateAddress})`
     );
   });
 
@@ -110,11 +130,14 @@ task(
       signer
     );
 
-    const tx = await counter.addChainSupport(
+    const tx1 = await counter.setDeBridgeGate(args.deBridgeGateAddress);
+    await tx1.wait();
+
+    const tx2 = await counter.addChainSupport(
       args.incrementorChainId,
       args.incrementorAddress
     );
-    await tx.wait();
+    await tx2.wait();
 
     console.log(
       `${chalk.green(

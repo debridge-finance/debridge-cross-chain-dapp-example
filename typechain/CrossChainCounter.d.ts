@@ -32,6 +32,7 @@ interface CrossChainCounterInterface extends ethers.utils.Interface {
     "removeChainSupport(uint256)": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
+    "setDeBridgeGate(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
   };
 
@@ -77,6 +78,10 @@ interface CrossChainCounterInterface extends ethers.utils.Interface {
     values: [BytesLike, string]
   ): string;
   encodeFunctionData(
+    functionFragment: "setDeBridgeGate",
+    values: [string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
@@ -113,6 +118,10 @@ interface CrossChainCounterInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setDeBridgeGate",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
@@ -261,6 +270,11 @@ export class CrossChainCounter extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setDeBridgeGate(
+      deBridgeGate_: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -316,6 +330,11 @@ export class CrossChainCounter extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setDeBridgeGate(
+    deBridgeGate_: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   supportsInterface(
     interfaceId: BytesLike,
     overrides?: CallOverrides
@@ -368,6 +387,11 @@ export class CrossChainCounter extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setDeBridgeGate(
+      deBridgeGate_: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -540,6 +564,11 @@ export class CrossChainCounter extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setDeBridgeGate(
+      deBridgeGate_: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -598,6 +627,11 @@ export class CrossChainCounter extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setDeBridgeGate(
+      deBridgeGate_: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

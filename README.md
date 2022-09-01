@@ -50,10 +50,10 @@ Trying these contracts on the mainnet is almost the same: you can use the same c
 It is important to remember that to finalize a cross-chain call (meaning that a broadcasted cross-chain message is being executed on the destination chain) a second transaction claiming the cross-chain message must be included to the destination chain. It can be done either:
 - automatically by supplying extra amount of native currency of the origin chain as an `executionFee`, enough to cover the costs of including the transaction to the destination chain;
 - manually on the [deExplorer](https://explorer.debridge.finance/), where you can find the proper cross-chain transaction by its `submissionId`;
-- programmatically, fetching validators' signatures and properly constructing the transaction to claim the cross-chain message. This is out of scope of this document, however [this guide](https://docs.debridge.finance/build-with-debridge/a-cross-chain-interoperable-dapp-primer) is a good starting point.
+- programmatically, fetching validators' signatures and properly constructing the transaction to claim the cross-chain message. This is out of scope of this document, however [this guide](https://docs.debridge.finance/build-with-debridge/getting-started) is a good starting point.
 
 ### Further reading
 
-- [A cross-chain interoperable dapp primer](https://docs.debridge.finance/build-with-debridge/a-cross-chain-interoperable-dapp-primer)
+- [A cross-chain interoperable dapp primer]([https://docs.debridge.finance/build-with-debridge/a-cross-chain-interoperable-dapp-primer](https://docs.debridge.finance/build-with-debridge/getting-started)
 - Using the deBridge emulator video (coming soon)
 

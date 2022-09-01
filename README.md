@@ -54,6 +54,6 @@ It is important to remember that to finalize a cross-chain call (meaning that a 
 
 ### Further reading
 
-- [A cross-chain interoperable dapp primer]([https://docs.debridge.finance/build-with-debridge/a-cross-chain-interoperable-dapp-primer](https://docs.debridge.finance/build-with-debridge/getting-started)
+- [Getting started guide](https://docs.debridge.finance/build-with-debridge/getting-started)
 - Using the deBridge emulator video (coming soon)
 

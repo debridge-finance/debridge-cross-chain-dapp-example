@@ -40,7 +40,7 @@ This repository comes with a bunch of handy console commands to reproduce the af
 
 The best way to try them is to follow instructions from the `hardhat-debridge` plugin:
 1. Run the hardhat node in the first terminal: `npx hardhat node`;
-2. Run the emulator in the second terminal, attaching it to the hardhat node: `npx debridge-run-emulator --network localhost`;
+2. Run the emulator in the second terminal, attaching it to the hardhat node: `npx hardhat debridge-run-emulator --network localhost`;
 3. Call these commands one by one against the hardhat node (`--network localhost`) in the third terminal.
 
 #### Note on running against mainnet
